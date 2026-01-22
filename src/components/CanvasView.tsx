@@ -3,8 +3,55 @@ import React, { useRef, useState } from 'react';
 import gsap from 'gsap';
 import OverlayColorWheel from './overlay/OverlayColorWheel';
 import LayersPanel from './LayersPanel';
+import SVGGrid from './SVGGrid';
+import SVGGridLined from './SVGGridLined';
+import SVGPaths from './SVGPaths';
+import SVGTextElements from './SVGTextElements';
+import SVGPoints from './SVGPoints';
+import Card, { CardType } from './Card';
 
 const CanvasView: React.FC = () => {
+  // --- Cards state ---
+  const [cards, setCards] = useState<CardType[]>([
+    {
+      id: 'card-1',
+      x: window.innerWidth / 2 - 170,
+      y: window.innerHeight / 2 - 110,
+      width: 340,
+      height: 220,
+      title: 'Dotted Notebook Canvas',
+      content: 'Draw with your mouse or touch. SVG paths are animated with GSAP.',
+    },
+  ]);
+
+  // Add card handler
+  const handleAddCard = () => {
+    const id = `card-${Date.now()}`;
+    setCards(prev => [
+      ...prev,
+      {
+        id,
+        x: 100 + Math.random() * 200,
+        y: 100 + Math.random() * 200,
+        width: 320,
+        height: 180,
+        title: 'New Card',
+        content: 'Double-click to edit.',
+      },
+    ]);
+  };
+  // Drag card
+  const handleDragCard = (id: string, x: number, y: number) => {
+    setCards(prev => prev.map(c => c.id === id ? { ...c, x, y } : c));
+  };
+  // Resize card
+  const handleResizeCard = (id: string, width: number, height: number) => {
+    setCards(prev => prev.map(c => c.id === id ? { ...c, width, height } : c));
+  };
+  // Edit card
+  const handleEditCard = (id: string, title: string, content: string) => {
+    setCards(prev => prev.map(c => c.id === id ? { ...c, title, content } : c));
+  };
 
 
 
@@ -34,9 +81,20 @@ const CanvasView: React.FC = () => {
   const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
+  const [backgroundType, setBackgroundType] = useState<'blank' | 'dotted' | 'lined'>('dotted');
+  const [zoom, setZoom] = useState(1);
+  const [canvasSize, setCanvasSize] = useState<{ width: number; height: number }>({ width: window.innerWidth, height: window.innerHeight });
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setCanvasSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Toggle snap-to-grid with S key, point mode with P key, clear with Ctrl+C or Cmd+C
+  // Toggle snap-to-grid with S key, point mode with P key, clear with Ctrl+C or Cmd+C, background with Ctrl+G
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -71,6 +129,19 @@ const CanvasView: React.FC = () => {
           setPoints([]);
           setCurrentPath('');
           setTextElements([]);
+        }
+        if (e.key === 'g' || e.key === 'G') {
+          setBackgroundType(prev => {
+            if (prev === 'blank') return 'dotted';
+            if (prev === 'dotted') return 'lined';
+            return 'blank';
+          });
+        }
+        if (e.key === '+' || e.key === '=') {
+          setZoom(z => Math.min(5, z + 0.2));
+        }
+        if (e.key === '-') {
+          setZoom(z => Math.max(0.2, z - 0.2));
         }
       }
       if (e.key === 'Escape') {
@@ -281,8 +352,8 @@ const CanvasView: React.FC = () => {
       {/* Snap to grid, point mode, and measurement indicator */}
       <div style={{
         position: 'fixed',
-        bottom: 75,
-        right: 24,
+        bottom: '12%',
+        right: '2%',
         background: '#eee',
         color: '#222',
         borderRadius: 6,
@@ -383,80 +454,74 @@ const CanvasView: React.FC = () => {
           />
         </div>
       )}
+      {/* Background toggle UI and zoom controls */}
+      <div style={{position:'fixed',bottom:'3%',right:'2%',zIndex:2001,background:'#fff',borderRadius:6,padding:'4px 12px',boxShadow:'0 2px 8px rgba(0,0,0,0.08)',fontSize:13,display:'flex',alignItems:'center',gap:16}}>
+        <span style={{marginRight:8,fontWeight:600}}>Background:</span>
+        <select value={backgroundType} onChange={e => setBackgroundType(e.target.value as any)}>
+          <option value="blank">Blank</option>
+          <option value="dotted">Dotted</option>
+          <option value="lined">Lined</option>
+        </select>
+        <span style={{marginLeft:16,fontWeight:600}}>Zoom:</span>
+        <button onClick={() => setZoom(z => Math.max(0.2, z - 0.2))} style={{marginRight:4}}>-</button>
+        <span style={{minWidth:40,textAlign:'center'}}>{(zoom * 100).toFixed(0)}%</span>
+        <button onClick={() => setZoom(z => Math.min(5, z + 0.2))}>+</button>
+      </div>
+      {/* Grid SVG always fills viewport, not affected by zoom */}
       <svg
-        width="100%"
-        height="100%"
-        style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0 }}
+        width={window.innerWidth}
+        height={window.innerHeight}
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}
+      >
+        {backgroundType === 'dotted' && (
+          <SVGGrid width={window.innerWidth} height={window.innerHeight} zoom={1} />
+        )}
+        {backgroundType === 'lined' && (
+          <SVGGridLined width={window.innerWidth} height={window.innerHeight} />
+        )}
+      </svg>
+      {/* Main drawing SVG, zoomed */}
+      <svg
+        width={canvasSize.width}
+        height={canvasSize.height}
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          transform: `translate(-50%, -50%) scale(${zoom})`,
+          transformOrigin: 'center center',
+          zIndex: 1,
+          background: 'transparent',
+          boxShadow: zoom < 1 ? '0 0 24px 4px rgba(0,0,0,0.08)' : undefined,
+        }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
-        {/* Dots grid */}
-        {Array.from({ length: Math.ceil(window.innerWidth / 20) }).map((_, x) =>
-          Array.from({ length: Math.ceil(window.innerHeight / 20) }).map((_, y) => (
-            <circle
-              key={`dot-${x}-${y}`}
-              cx={x * 20 + 10}
-              cy={y * 20 + 10}
-              r={1.2}
-              fill="#bbb"
-              opacity={0.7}
-            />
-          ))
-        )}
         {/* Drawn paths */}
-        {paths.filter(p => {
-          const layer = layers.find(l => l.id === p.layerId);
-          return layer && layer.visible;
-        }).map((p, i) => {
-          const visiblePaths = paths.filter(pth => {
-            const layer = layers.find(l => l.id === pth.layerId);
-            return layer && layer.visible;
-          });
-          const isSelected = selectMode && visiblePaths[selectedPathIndex ?? -1]?.d === p.d;
-          return (
-            <path
-              key={i}
-              d={p.d}
-              stroke={p.color}
-              strokeWidth={isSelected ? 4 : 2.5}
-              fill="none"
-              opacity={isSelected ? 1 : 0.95}
-              style={{ cursor: selectMode ? 'move' : 'pointer', filter: isSelected ? 'drop-shadow(0 0 4px #1a3a7a)' : undefined }}
-              onPointerDown={e => handlePathPointerDown(e, i)}
-            />
-          );
-        })}
+        <SVGPaths
+          paths={paths}
+          layers={layers}
+          selectMode={selectMode}
+          selectedPathIndex={selectedPathIndex}
+          handlePathPointerDown={handlePathPointerDown}
+        />
         {/* Draw text elements */}
-        {textElements.filter(t => {
-          const layer = layers.find(l => l.id === t.layerId);
-          return layer && layer.visible;
-        }).map((t, i) => {
-          const visibleTexts = textElements.filter(txt => {
-            const layer = layers.find(l => l.id === txt.layerId);
-            return layer && layer.visible;
-          });
-          const isSelected = selectMode && visibleTexts[selectedTextIndex ?? -1]?.x === t.x && visibleTexts[selectedTextIndex ?? -1]?.y === t.y;
-          return (
-            <text
-              key={`text-${i}`}
-              x={t.x}
-              y={t.y}
-              fill={t.color}
-              fontSize={20}
-              fontFamily="inherit, sans-serif"
-              style={{
-                userSelect: 'none',
-                cursor: selectMode ? 'move' : 'text',
-                filter: isSelected ? 'drop-shadow(0 0 4px #1a3a7a)' : undefined,
-                pointerEvents: selectMode ? 'auto' : 'none',
-              }}
-              onPointerDown={e => handleTextPointerDown(e, i)}
-            >
-              {t.value}
-            </text>
-          );
-        })}
+        <SVGTextElements
+          textElements={textElements}
+          layers={layers}
+          selectMode={selectMode}
+          selectedTextIndex={selectedTextIndex}
+          handleTextPointerDown={handleTextPointerDown}
+        />
         {currentPath && (
           <path
             d={currentPath}
@@ -467,46 +532,39 @@ const CanvasView: React.FC = () => {
           />
         )}
         {/* Draw points in point mode */}
-        {pointMode && points.map((pt, i) => (
-          <circle
-            key={`pt-${i}`}
-            cx={pt.x}
-            cy={pt.y}
-            r={4}
-            fill={color}
-            opacity={0.7}
-          />
-        ))}
+        <SVGPoints points={points} color={color} pointMode={pointMode} />
       </svg>
-      {/* Floating card for comfort */}
-      {/* <div
+      {/* Dynamic Cards */}
+      {cards.map(card => (
+        <Card
+          key={card.id}
+          card={card}
+          onDrag={handleDragCard}
+          onResize={handleResizeCard}
+          onEdit={handleEditCard}
+        />
+      ))}
+      {/* Add Card Button */}
+      <button
         style={{
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          minWidth: 340,
-          minHeight: 220,
-          background: 'rgba(255,255,255,0.7)',
-          borderRadius: '18px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          padding: '32px 40px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1,
+          position: 'fixed',
+          left: 24,
+          top: 24,
+          zIndex: 2002,
+          background: '#fff',
+          border: '1px solid #aaa',
+          borderRadius: 8,
+          padding: '8px 18px',
+          fontWeight: 700,
+          fontSize: 16,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          cursor: 'pointer',
         }}
+        onClick={handleAddCard}
       >
-        <h2 style={{ position: 'fixed', fontFamily: 'Meslo, monospace', fontWeight: 700, fontSize: 22, marginBottom: 16, color: '#222' }}>
-          Dotted Notebook Canvas
-        </h2>
-        <p style={{ fontSize: 15, color: '#444', marginBottom: 8, textAlign: 'center' }}>
-          Draw with your mouse or touch. SVG paths are animated with GSAP.
-        </p>
-      </div> */}
+        + Add Card
+      </button>
+      // (removed duplicate card state/handlers)
     </div>
   );
 };
