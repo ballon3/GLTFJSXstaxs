@@ -3,9 +3,13 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, Stage, Grid, OrbitControls, Environment } from '@react-three/drei';
 import { EffectComposer, Bloom, ToneMapping } from '@react-three/postprocessing';
 import { easing } from 'maath';
+import OverlayColorWheel from './overlay/OverlayColorWheel';
 
 const ThreeDView: React.FC = () => {
   return (
+    <>
+    <OverlayColorWheel color="#222" setColor={() => {}} />
+    
     <Canvas flat shadows camera={{ position: [-15, 0, 10], fov: 25 }}>
       <fog attach="fog" args={['black', 15, 22.5]} />
       <Stage intensity={0.5} environment="city" shadows={{ type: 'accumulative', bias: -0.001, intensity: Math.PI }} adjustCamera={false}>
@@ -19,6 +23,7 @@ const ThreeDView: React.FC = () => {
       </EffectComposer>
       <Environment background preset="sunset" blur={0.8} />
     </Canvas>
+    </>
   );
 };
 

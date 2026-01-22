@@ -43,11 +43,11 @@ const App: React.FC = () => {
           fontSize: '15px',
           fontWeight: 600,
           letterSpacing: '0.05em',
-          // boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          //boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           zIndex: 1000,
         }}
       >
-        UI/UX: {mode.toUpperCase()}
+        ui // {mode.toUpperCase()}
       </div>
     </>
   );

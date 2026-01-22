@@ -74,7 +74,7 @@ const OverlayColorWheel: React.FC<OverlayColorWheelProps> = ({ color, setColor }
         position: 'fixed',
         top: 18,
         left: 18,
-        zIndex: 2000,
+        zIndex: 2100,
         background: 'rgba(255,255,255,0.85)',
         borderRadius: '50%',
         display: 'flex',

@@ -11,7 +11,7 @@ const OverlayShortcuts = () => (
       position: 'fixed',
       top: 100,
       left: 32,
-      zIndex: 2100,
+      zIndex: 2000,
       fontFamily: 'Menlo, monospace',
       fontSize: 13,
       color: '#222',
