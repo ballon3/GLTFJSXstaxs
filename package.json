@@ -27,7 +27,10 @@
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
     "@types/webxr": "^0.5.24",
+    "@vite-pwa/assets-generator": "^1.0.2",
     "@vitejs/plugin-react": "^5.1.2",
+    "sharp": "^0.34.5",
+    "sharp-ico": "^0.1.5",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-pwa": "^1.2.0"

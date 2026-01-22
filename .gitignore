@@ -1,2 +1,16 @@
-node_modules
-src/.DS_Store
+node_modules/
+dist/
+# macOS
+.DS_Store
+# Logs
+*.log
+pnpm-debug.log
+yarn-debug.log
+yarn-error.log
+# Env files
+.env
+.env.*
+# Vite/React build cache
+.vite
+# VSCode settings
+.vscode/
