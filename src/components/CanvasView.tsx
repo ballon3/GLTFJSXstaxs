@@ -4,8 +4,6 @@ import gsap from 'gsap';
 import OverlayColorWheel from './overlay/OverlayColorWheel';
 import LayersPanel from './LayersPanel';
 
-
-
 const CanvasView: React.FC = () => {
 
 
@@ -35,6 +33,7 @@ const CanvasView: React.FC = () => {
   const [selectedPathIndex, setSelectedPathIndex] = useState<number | null>(null);
   const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
   const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // Toggle snap-to-grid with S key, point mode with P key, clear with Ctrl+C or Cmd+C
@@ -158,6 +157,7 @@ const CanvasView: React.FC = () => {
 
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     let { offsetX, offsetY } = e.nativeEvent;
+    setCursorPos({ x: offsetX, y: offsetY });
     if (snapToGrid) {
       offsetX = snap(offsetX);
       offsetY = snap(offsetY);
@@ -244,7 +244,7 @@ const CanvasView: React.FC = () => {
     const handler = (e: KeyboardEvent) => {
       if (pointMode && (e.key === 'Enter' || e.key === 'Return')) {
         if (currentPath) {
-          setPaths((prev) => [...prev, { d: currentPath, color }]);
+          setPaths((prev) => [...prev, { d: currentPath, color, layerId: activeLayerId }]);
           setCurrentPath('');
           setPoints([]);
         }
@@ -330,6 +330,11 @@ const CanvasView: React.FC = () => {
                 <span style={{fontWeight:400,marginRight:4}}>Units:</span>
                 <span style={{fontWeight:700}}>{measure !== null ? measure.toFixed(1) : '--'}</span>
               </span>
+              {cursorPos && (
+                <span style={{marginLeft:12,opacity:0.8,fontWeight:400,fontSize:13}}>
+                  <span style={{fontWeight:700}}>Cursor:</span> {Math.round(cursorPos.x)}, {Math.round(cursorPos.y)}
+                </span>
+              )}
             </div>
           );
         })()}
