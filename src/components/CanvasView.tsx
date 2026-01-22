@@ -1,5 +1,7 @@
 
 import React, { useRef, useState } from 'react';
+import ToolStatusTooltip from './ToolStatusTooltip';
+import StatsOverlay from './StatsOverlay';
 import gsap from 'gsap';
 import OverlayColorWheel from './overlay/OverlayColorWheel';
 import LayersPanel from './LayersPanel';
@@ -11,6 +13,9 @@ import SVGPoints from './SVGPoints';
 import Card, { CardType } from './Card';
 
 const CanvasView: React.FC = () => {
+  // --- Overlay collapsed state ---
+  const [toolStatusCollapsed, setToolStatusCollapsed] = useState(true);
+  const [statsCollapsed, setStatsCollapsed] = useState(false);
   // --- Cards state ---
   const [cards, setCards] = useState<CardType[]>([
     {
@@ -19,8 +24,8 @@ const CanvasView: React.FC = () => {
       y: window.innerHeight / 2 - 110,
       width: 340,
       height: 220,
-      title: 'Dotted Notebook Canvas',
-      content: 'Draw with your mouse or touch. SVG paths are animated with GSAP.',
+      title: 'staxs.dev <br/> studio canvas',
+      content: 'A flexible digital canvas for brainstorming, note-taking, and visual thinking.',
     },
   ]);
 
@@ -97,6 +102,12 @@ const CanvasView: React.FC = () => {
   // Toggle snap-to-grid with S key, point mode with P key, clear with Ctrl+C or Cmd+C, background with Ctrl+G
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // Cmd+T toggles tool status overlay
+      if (e.metaKey && !e.ctrlKey && !e.altKey && (e.key === 't' || e.key === 'T')) {
+        setToolStatusCollapsed((prev) => !prev);
+        e.preventDefault();
+        return;
+      }
       if (e.ctrlKey && !e.metaKey && !e.altKey) {
         if (e.key === 's' || e.key === 'S') {
           setSnapToGrid((prev) => !prev);
@@ -349,30 +360,13 @@ const CanvasView: React.FC = () => {
       />
       {/* Color wheel overlay */}
       <OverlayColorWheel color={color} setColor={setColor} />
-      {/* Snap to grid, point mode, and measurement indicator */}
-      <div style={{
-        position: 'fixed',
-        bottom: '12%',
-        right: '2%',
-        background: '#eee',
-        color: '#222',
-        borderRadius: 6,
-        padding: '4px 14px',
-        fontSize: 13,
-        fontWeight: 600,
-        letterSpacing: '0.04em',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        zIndex: 1001,
-        userSelect: 'none',
-        transition: 'all 0.2s',
-        display: 'flex',
-        gap: 16,
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        minWidth: 260,
-      }}>
-        {/* Measurement calculation and tool status */}
-        {(() => {
+      {/* Tool status modal tooltip as a component */}
+      <ToolStatusTooltip
+        snapToGrid={snapToGrid}
+        pointMode={pointMode}
+        selectMode={selectMode}
+        textMode={textMode}
+        measure={(function() {
           let measure: number | null = null;
           if (pointMode && points.length >= 2) {
             const a = points[points.length - 2];
@@ -390,41 +384,46 @@ const CanvasView: React.FC = () => {
               }
             }
           }
-          return (
-            <div style={{display:'flex',gap:16,alignItems:'center',width:'100%'}}>
-              <span>Snap: <b>{snapToGrid ? 'ON' : 'OFF'}</b> <span style={{opacity:0.7}}>(Ctrl+S)</span></span>
-              <span>Points: <b>{pointMode ? 'ON' : 'OFF'}</b> <span style={{opacity:0.7}}>(Ctrl+P, Enter)</span></span>
-              <span>Select: <b>{selectMode ? 'ON' : 'OFF'}</b> <span style={{opacity:0.7}}>(Ctrl+V)</span></span>
-              <span>Text: <b>{textMode ? 'ON' : 'OFF'}</b> <span style={{opacity:0.7}}>(Ctrl+T)</span></span>
-              <span>Clear: <b>Ctrl+C</b></span>
-              <span style={{borderLeft:'1px solid #ccc',marginLeft:8,paddingLeft:12,opacity:0.8}}>
-                <span style={{fontWeight:400,marginRight:4}}>Units:</span>
-                <span style={{fontWeight:700}}>{measure !== null ? measure.toFixed(1) : '--'}</span>
-              </span>
-              {cursorPos && (
-                <span style={{marginLeft:12,opacity:0.8,fontWeight:400,fontSize:13}}>
-                  <span style={{fontWeight:700}}>Cursor:</span> {Math.round(cursorPos.x)}, {Math.round(cursorPos.y)}
-                </span>
-              )}
-            </div>
-          );
+          return measure;
         })()}
-        {pointMode && (
-          <div style={{fontWeight:400,fontSize:12,opacity:0.8,marginTop:2,textAlign:'right',width:'100%'}}>
-            <span>Point mode: Click to set points, press Enter to connect and finish.</span>
-          </div>
-        )}
-        {selectMode && (
-          <div style={{fontWeight:400,fontSize:12,opacity:0.8,marginTop:2,textAlign:'right',width:'100%'}}>
-            <span>Select mode: Click a path or text, then drag to move it.</span>
-          </div>
-        )}
-        {textMode && (
-          <div style={{fontWeight:400,fontSize:12,opacity:0.8,marginTop:2,textAlign:'right',width:'100%'}}>
-            <span>Text mode: Click to place, type, Enter to add.</span>
-          </div>
-        )}
-      </div>
+        cursorPos={cursorPos}
+        backgroundType={backgroundType}
+        zoom={zoom}
+        collapsed={toolStatusCollapsed}
+        onToggleCollapse={() => setToolStatusCollapsed(c => !c)}
+      />
+      {/* Stats Overlay (collapsed by default, if you want to show/hide) */}
+      <StatsOverlay
+        backgroundType={backgroundType}
+        zoom={zoom}
+        measure={(function() {
+          let measure: number | null = null;
+          if (pointMode && points.length >= 2) {
+            const a = points[points.length - 2];
+            const b = points[points.length - 1];
+            measure = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
+          } else if (!pointMode && currentPath) {
+            const match = currentPath.match(/L(\d+\.?\d*),(\d+\.?\d*)$/);
+            if (match) {
+              const [_, x, y] = match;
+              const d = paths.length > 0 ? paths[paths.length - 1].d : '';
+              const m = d.match(/L(\d+\.?\d*),(\d+\.?\d*)$/);
+              if (m) {
+                const [__, x0, y0] = m;
+                measure = Math.sqrt((parseFloat(x) - parseFloat(x0)) ** 2 + (parseFloat(y) - parseFloat(y0)) ** 2);
+              }
+            }
+          }
+          return measure;
+        })()}
+        cursorPos={cursorPos}
+        pointMode={pointMode}
+        points={points}
+        currentPath={currentPath}
+        paths={paths}
+        collapsed={statsCollapsed}
+        onToggleCollapse={() => setStatsCollapsed(c => !c)}
+      />
       {/* Dotted notebook background as SVG */}
       {/* Text input overlay for adding text */}
       {pendingText && (
@@ -454,19 +453,7 @@ const CanvasView: React.FC = () => {
           />
         </div>
       )}
-      {/* Background toggle UI and zoom controls */}
-      <div style={{position:'fixed',bottom:'3%',right:'2%',zIndex:2001,background:'#fff',borderRadius:6,padding:'4px 12px',boxShadow:'0 2px 8px rgba(0,0,0,0.08)',fontSize:13,display:'flex',alignItems:'center',gap:16}}>
-        <span style={{marginRight:8,fontWeight:600}}>Background:</span>
-        <select value={backgroundType} onChange={e => setBackgroundType(e.target.value as any)}>
-          <option value="blank">Blank</option>
-          <option value="dotted">Dotted</option>
-          <option value="lined">Lined</option>
-        </select>
-        <span style={{marginLeft:16,fontWeight:600}}>Zoom:</span>
-        <button onClick={() => setZoom(z => Math.max(0.2, z - 0.2))} style={{marginRight:4}}>-</button>
-        <span style={{minWidth:40,textAlign:'center'}}>{(zoom * 100).toFixed(0)}%</span>
-        <button onClick={() => setZoom(z => Math.min(5, z + 0.2))}>+</button>
-      </div>
+
       {/* Grid SVG always fills viewport, not affected by zoom */}
       <svg
         width={window.innerWidth}
@@ -548,8 +535,8 @@ const CanvasView: React.FC = () => {
       <button
         style={{
           position: 'fixed',
-          left: 24,
-          top: 24,
+          left: '5%',
+          top: '3%',
           zIndex: 2002,
           background: '#fff',
           border: '1px solid #aaa',
@@ -564,7 +551,6 @@ const CanvasView: React.FC = () => {
       >
         + Add Card
       </button>
-      // (removed duplicate card state/handlers)
     </div>
   );
 };
