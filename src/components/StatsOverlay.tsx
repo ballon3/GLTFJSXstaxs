@@ -70,7 +70,6 @@ const StatsOverlay: React.FC<StatsOverlayProps> = ({
         gap: 18,
         color: '#03291c',
         fontFamily: 'Meslo, monospace',
-        fontWeight: 700,
         letterSpacing: '0.04em',
         boxShadow: '0 2px 12px 0 rgba(0,0,0,0.18)',
         userSelect: 'none',
@@ -98,16 +97,16 @@ const StatsOverlay: React.FC<StatsOverlayProps> = ({
         Cursor: <span style={{ color: '#000000' }}>{cursorPos ? `${Math.round(cursorPos.x)},${Math.round(cursorPos.y)}` : '--,--'}</span>
       </button> */}
       <span style={{ minWidth: 60 }}>
-        BG: <span style={{ color: '#000000' }}>{backgroundType[0].toUpperCase()}</span>
+        BG: <span style={{ color: '#888' }}>{backgroundType[0].toUpperCase()}</span>
       </span>
       <span style={{ minWidth: 60 }}>
-        Zoom: <span style={{ color: '#000000' }}>{(zoom * 100).toFixed(0)}%</span>
+        Zoom: <span style={{ color: '#888' }}>{(zoom * 100).toFixed(0)}%</span>
       </span>
       <span style={{ minWidth: 70 }}>
-        Units: <span style={{ color: '#000000' }}>{measure !== null ? measure.toFixed(1) : '--'}</span>
+        Units: <span style={{ color: '#888' }}>{measure !== null ? measure.toFixed(1) : '--'}</span>
       </span>
       <span style={{ minWidth: 90 }}>
-        Cursor: <span style={{ color: '#000000' }}>{cursorPos ? `${Math.round(cursorPos.x)},${Math.round(cursorPos.y)}` : '--,--'}</span>
+        Cursor: <span style={{ color: '#888' }}>{cursorPos ? `${Math.round(cursorPos.x)},${Math.round(cursorPos.y)}` : '--,--'}</span>
       </span>
     </div>
   );
