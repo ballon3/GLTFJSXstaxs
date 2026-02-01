@@ -11,6 +11,7 @@ import SVGPaths from './SVGPaths';
 import SVGTextElements from './SVGTextElements';
 import SVGPoints from './SVGPoints';
 import Card, { CardType } from './Card';
+import SVGConnections, { Connection, Edge } from './SVGConnections';
 
 const CanvasView: React.FC = () => {
   // --- Overlay collapsed state ---
@@ -26,6 +27,7 @@ const CanvasView: React.FC = () => {
       height: 220,
       title: 'staxs.dev <br/> studio canvas',
       content: 'A flexible digital canvas for brainstorming, note-taking, and visual thinking.',
+      hidden: false,
     },
   ]);
 
@@ -42,9 +44,44 @@ const CanvasView: React.FC = () => {
         height: 180,
         title: 'New Card',
         content: 'Double-click to edit.',
+        hidden: false,
       },
     ]);
   };
+  // Connection helpers
+  const edgePoints = (card: CardType) => ({
+    top: { x: card.x + card.width / 2, y: card.y },
+    right: { x: card.x + card.width, y: card.y + card.height / 2 },
+    bottom: { x: card.x + card.width / 2, y: card.y + card.height },
+    left: { x: card.x, y: card.y + card.height / 2 },
+  });
+  const handleAnchorClick = (cardId: string, edge: Edge) => {
+    if (!pendingConn) {
+      setPendingConn({ cardId, edge });
+    } else {
+      const id = `conn-${Date.now()}`;
+      setConnections((prev) => [
+        ...prev,
+        {
+          id,
+          fromCardId: pendingConn.cardId,
+          fromEdge: pendingConn.edge,
+          toCardId: cardId,
+          toEdge: edge,
+        },
+      ]);
+      setPendingConn(null);
+    }
+  };
+  const cancelPendingConn = () => setPendingConn(null);
+    // Hide/Show card
+    const handleToggleHideCard = (id: string) => {
+      setCards(prev => prev.map(c => c.id === id ? { ...c, hidden: !c.hidden } : c));
+    };
+    // Delete card
+    const handleDeleteCard = (id: string) => {
+      setCards(prev => prev.filter(c => c.id !== id));
+    };
   // Drag card
   const handleDragCard = (id: string, x: number, y: number) => {
     setCards(prev => prev.map(c => c.id === id ? { ...c, x, y } : c));
@@ -89,6 +126,80 @@ const CanvasView: React.FC = () => {
   const [backgroundType, setBackgroundType] = useState<'blank' | 'dotted' | 'lined'>('dotted');
   const [zoom, setZoom] = useState(1);
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number }>({ width: window.innerWidth, height: window.innerHeight });
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [pendingConn, setPendingConn] = useState<{ cardId: string; edge: Edge } | null>(null);
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
+  const [anchorHover, setAnchorHover] = useState<boolean>(false);
+  const [connDrag, setConnDrag] = useState<{
+    cardId: string;
+    edge: Edge;
+    start: { x: number; y: number };
+    cursor: { x: number; y: number };
+  } | null>(null);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  // --- Project save/load ---
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [saveVersion, setSaveVersion] = useState<number>(0);
+  const projectKey = 'staxs_project';
+  const formatTs = (ts: number) => {
+    const d = new Date(ts);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  };
+  // --- Drag-from-anchor helpers ---
+  const findCardAt = (x: number, y: number) => {
+    return cards.find((c) => !c.hidden && x >= c.x && x <= c.x + c.width && y >= c.y && y <= c.y + c.height) || null;
+  };
+  const nearestEdge = (card: CardType, pos: { x: number; y: number }): Edge => {
+    const pts = edgePoints(card);
+    const d = (p: { x: number; y: number }) => (p.x - pos.x) ** 2 + (p.y - pos.y) ** 2;
+    const entries: Array<[Edge, number]> = [
+      ['top', d(pts.top)],
+      ['right', d(pts.right)],
+      ['bottom', d(pts.bottom)],
+      ['left', d(pts.left)],
+    ];
+    entries.sort((a, b) => a[1] - b[1]);
+    return entries[0][0];
+  };
+  const startConnDrag = (cardId: string, edge: Edge) => {
+    const card = cards.find((c) => c.id === cardId);
+    if (!card) return;
+    const start = edgePoints(card)[edge];
+    setConnDrag({ cardId, edge, start, cursor: { x: start.x, y: start.y } });
+  };
+  React.useEffect(() => {
+    if (!connDrag) return;
+    const onMove = (e: MouseEvent) => {
+      setConnDrag((prev) => (prev ? { ...prev, cursor: { x: e.clientX, y: e.clientY } } : prev));
+    };
+    const onUp = (e: MouseEvent) => {
+      const target = findCardAt(e.clientX, e.clientY);
+      if (target) {
+        const edge = nearestEdge(target, { x: e.clientX, y: e.clientY });
+        const id = `conn-${Date.now()}`;
+        setConnections((prev) => [
+          ...prev,
+          {
+            id,
+            fromCardId: connDrag.cardId,
+            fromEdge: connDrag.edge,
+            toCardId: target.id,
+            toEdge: edge,
+          },
+        ]);
+      }
+      setConnDrag(null);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [connDrag, cards]);
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -96,6 +207,27 @@ const CanvasView: React.FC = () => {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  // Load saved project on mount
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem(projectKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.cards) setCards(parsed.cards);
+        if (parsed.connections) setConnections(parsed.connections);
+        if (parsed.layers) setLayers(parsed.layers);
+        if (parsed.paths) setPaths(parsed.paths);
+        if (parsed.textElements) setTextElements(parsed.textElements);
+        if (parsed.backgroundType) setBackgroundType(parsed.backgroundType);
+        if (parsed.zoom) setZoom(parsed.zoom);
+        if (parsed.lastSavedAt) setLastSavedAt(parsed.lastSavedAt);
+        if (parsed.saveVersion) setSaveVersion(parsed.saveVersion);
+      }
+    } catch (e) {
+      // ignore load errors
+    }
   }, []);
   const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
@@ -282,6 +414,28 @@ const CanvasView: React.FC = () => {
     setDrawing(false);
   };
 
+  // Save project to localStorage
+  const handleSaveProject = () => {
+    const payload = {
+      cards,
+      connections,
+      layers,
+      paths,
+      textElements,
+      backgroundType,
+      zoom,
+      lastSavedAt: Date.now(),
+      saveVersion: saveVersion + 1,
+    };
+    try {
+      localStorage.setItem(projectKey, JSON.stringify(payload));
+      setLastSavedAt(payload.lastSavedAt);
+      setSaveVersion(payload.saveVersion);
+    } catch (e) {
+      // ignore save errors
+    }
+  };
+
   // Handle text input submit
   const handleTextInputSubmit = () => {
     if (pendingText && textInputValue.trim()) {
@@ -346,6 +500,7 @@ const CanvasView: React.FC = () => {
         top: 0,
         left: 0,
         overflow: 'hidden',
+        background: darkMode ? '#0b0b0b' : '#f7f7f7',
       }}
     >
       {/* Layers UI */}
@@ -475,6 +630,50 @@ const CanvasView: React.FC = () => {
           <SVGGridLined width={window.innerWidth} height={window.innerHeight} />
         )}
       </svg>
+      {/* Connection drag preview */}
+      {connDrag && (
+        <svg
+          width={window.innerWidth}
+          height={window.innerHeight}
+          style={{ position: 'absolute', left: 0, top: 0, width: '100vw', height: '100vh', zIndex: 1002, pointerEvents: 'none' }}
+        >
+          <line x1={connDrag.start.x} y1={connDrag.start.y} x2={connDrag.cursor.x} y2={connDrag.cursor.y} stroke="#181818" strokeWidth={2} strokeDasharray="4 4" />
+        </svg>
+      )}
+      {/* Connections overlay */}
+      <SVGConnections connections={connections} cards={cards} darkMode={darkMode} />
+      {/* Anchors overlay */}
+      {cards.filter(c => !c.hidden && c.id === hoveredCardId).map((card) => (
+        <div key={`anchors-${card.id}`} style={{ position: 'absolute', left: 0, top: 0, zIndex: 1003, pointerEvents: 'none' }}>
+          {(['top','right','bottom','left'] as Edge[]).map((edge) => {
+            const pos = edgePoints(card)[edge];
+            return (
+              <button
+                key={`${card.id}-${edge}`}
+                title={`Connect from ${edge}`}
+                onMouseEnter={() => { setAnchorHover(true); setHoveredCardId(card.id); }}
+                onMouseLeave={() => { setAnchorHover(false); }}
+                onPointerDown={(e) => { e.stopPropagation(); startConnDrag(card.id, edge); }}
+                onClick={(e) => { e.stopPropagation(); if (connDrag) return; handleAnchorClick(card.id, edge); }}
+                style={{
+                  position: 'absolute',
+                  left: pos.x - 6,
+                  top: pos.y - 6,
+                  width: 12,
+                  height: 12,
+                  borderRadius: 9999,
+                  background: pendingConn && pendingConn.cardId === card.id && pendingConn.edge === edge ? 'rgba(24,24,24,0.8)' : 'rgba(255,255,255,0.6)',
+                  border: '1px solid rgba(136,136,136,0.6)',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                  opacity: 0.5,
+                  pointerEvents: 'auto',
+                  cursor: 'crosshair',
+                }}
+              />
+            );
+          })}
+        </div>
+      ))}
       {/* Main drawing SVG, zoomed */}
       <svg
         width={canvasSize.width}
@@ -526,16 +725,29 @@ const CanvasView: React.FC = () => {
         <Card
           key={card.id}
           card={card}
+          darkMode={darkMode}
           onDrag={handleDragCard}
           onResize={handleResizeCard}
           onEdit={handleEditCard}
+          onDelete={handleDeleteCard}
+          onHide={handleToggleHideCard}
+          onHoverChange={(id, hovered) => {
+            if (hovered) {
+              setHoveredCardId(id);
+            } else {
+              setHoveredCardId((prev) => {
+                if (prev !== id) return prev;
+                return anchorHover ? id : null;
+              });
+            }
+          }}
         />
       ))}
       {/* Add Card Button */}
       <button
         style={{
           position: 'fixed',
-          left: '5%',
+          left: '10%',
           top: '3%',
           zIndex: 2002,
           background: '#fff',
@@ -550,6 +762,105 @@ const CanvasView: React.FC = () => {
         onClick={handleAddCard}
       >
         + Add Card
+      </button>
+      {/* Save Project (top right) */}
+      <div
+        style={{
+          position: 'fixed',
+          right: '10%',
+          top: '3%',
+          zIndex: 2002,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+        }}
+      >
+        <button
+          title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          style={{
+            background: '#fff',
+            border: '1px solid #aaa',
+            borderRadius: 8,
+            padding: '8px 12px',
+            fontWeight: 700,
+            fontSize: 14,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            cursor: 'pointer',
+          }}
+          onClick={() => setDarkMode(m => !m)}
+        >
+          {darkMode ? 'Light Mode' : 'Dark Mode'}
+        </button>
+        <button
+          title="Save project"
+          style={{
+            background: '#fff',
+            border: '1px solid #aaa',
+            borderRadius: 8,
+            padding: '8px 18px',
+            fontWeight: 700,
+            fontSize: 16,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            cursor: 'pointer',
+          }}
+          onClick={handleSaveProject}
+        >
+          Save Project
+        </button>
+        <div
+          style={{
+            background: '#fff',
+            border: '1px solid #aaa',
+            borderRadius: 8,
+            padding: '8px 12px',
+            fontSize: 14,
+            color: '#333',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          }}
+        >
+          {lastSavedAt ? `Saved v${saveVersion} — ${formatTs(lastSavedAt)}` : 'Not saved yet'}
+        </div>
+      </div>
+      {pendingConn && (
+        <button
+          style={{
+            position: 'fixed',
+            left: '10%',
+            top: '16%',
+            zIndex: 2002,
+            background: '#fff',
+            border: '1px solid #aaa',
+            borderRadius: 8,
+            padding: '8px 18px',
+            fontWeight: 700,
+            fontSize: 16,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            cursor: 'pointer',
+          }}
+          onClick={cancelPendingConn}
+        >
+          Cancel Connection
+        </button>
+      )}
+      {/* Unhide all cards */}
+      <button
+        style={{
+          position: 'fixed',
+          left: '10%',
+          top: '10%',
+          zIndex: 2002,
+          background: '#fff',
+          border: '1px solid #aaa',
+          borderRadius: 8,
+          padding: '8px 18px',
+          fontWeight: 700,
+          fontSize: 16,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          cursor: 'pointer',
+        }}
+        onClick={() => setCards(prev => prev.map(c => ({ ...c, hidden: false })))}
+      >
+        Show Cards
       </button>
     </div>
   );
