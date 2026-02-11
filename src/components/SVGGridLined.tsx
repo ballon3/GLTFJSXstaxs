@@ -3,9 +3,10 @@ import React from 'react';
 interface SVGGridLinedProps {
   width: number;
   height: number;
+  darkMode?: boolean;
 }
 
-const SVGGridLined: React.FC<SVGGridLinedProps> = ({ width, height }) => {
+const SVGGridLined: React.FC<SVGGridLinedProps> = ({ width, height, darkMode = false }) => {
   // Add buffer so grid always fills instantly when zooming out
   const buffer = 2;
   const cols = Math.ceil(width / 20) + buffer;
@@ -20,9 +21,9 @@ const SVGGridLined: React.FC<SVGGridLinedProps> = ({ width, height }) => {
           y1={0}
           x2={x * 20 + 10}
           y2={height}
-          stroke="#bbb"
+          stroke={darkMode ? 'var(--grid)' : '#bbb'}
           strokeWidth={1}
-          opacity={0.5}
+          opacity={darkMode ? 0.4 : 0.5}
         />
       ))}
       {/* Horizontal lines */}
@@ -33,9 +34,9 @@ const SVGGridLined: React.FC<SVGGridLinedProps> = ({ width, height }) => {
           y1={y * 20 + 10}
           x2={width}
           y2={y * 20 + 10}
-          stroke="#bbb"
+          stroke={darkMode ? 'var(--grid)' : '#bbb'}
           strokeWidth={1}
-          opacity={0.5}
+          opacity={darkMode ? 0.4 : 0.5}
         />
       ))}
     </g>

@@ -10,7 +10,7 @@ import { useModeStore } from '../../store/useModeStore';
 const Overlay = () => {
   const mode = useModeStore((state) => state.mode);
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+    <div className="absolute inset-0 pointer-events-none">
       <OverlayLogo />
       <OverlayLink />
       {mode === '3d' && <OverlayInfo />}

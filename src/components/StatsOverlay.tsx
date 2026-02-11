@@ -25,56 +25,20 @@ const StatsOverlay: React.FC<StatsOverlayProps> = ({
     return (
       <button
         onClick={onToggleCollapse}
-        style={{
-          position: 'fixed',
-          bottom: 5,
-          right: 20,
-          zIndex: 2001,
-          background: 'rgba(241, 233, 233, 0.82)',
-          borderRadius: 7,
-          padding: '6px 18px',
-          fontSize: 14,
-          color: '#181818',
-          fontFamily: 'Meslo, monospace',
-          fontWeight: 700,
-          letterSpacing: '0.04em',
-          boxShadow: '0 2px 12px 0 rgba(0,0,0,0.18)',
-          userSelect: 'none',
-          border: 'none',
-          cursor: 'pointer',
-        }}
+        className="fixed bottom-1 right-5 z-[2001] rounded-md px-[18px] py-[6px] text-[14px] font-bold font-[Meslo,monospace] tracking-wider shadow-md cursor-pointer bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200"
         title="Show stats overlay"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{display:'block'}} xmlns="http://www.w3.org/2000/svg">
-          <rect x="3" y="17" width="3" height="4" fill="#181818"/>
-          <rect x="9" y="13" width="3" height="8" fill="#181818"/>
-          <rect x="15" y="9" width="3" height="12" fill="#181818"/>
-          <rect x="21" y="5" width="3" height="16" fill="#181818"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="block" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="17" width="3" height="4" fill="var(--stroke)"/>
+          <rect x="9" y="13" width="3" height="8" fill="var(--stroke)"/>
+          <rect x="15" y="9" width="3" height="12" fill="var(--stroke)"/>
+          <rect x="21" y="5" width="3" height="16" fill="var(--stroke)"/>
         </svg>
       </button>
     );
   }
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: 5,
-        right: 20,
-        zIndex: 2001,
-        // background: 'rgba(255, 255, 255, 0.82)',
-        borderRadius: 7,
-        padding: '6px 18px',
-        fontSize: 14,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 18,
-        color: '#03291c',
-        fontFamily: 'Meslo, monospace',
-        letterSpacing: '0.04em',
-        boxShadow: '0 2px 12px 0 rgba(0,0,0,0.18)',
-        userSelect: 'none',
-      }}
-    >
+    <div className="fixed bottom-1 right-5 z-[2001] rounded-md px-[18px] py-[6px] text-[14px] flex items-center gap-[18px] shadow-md select-none text-[var(--stroke)]">
       {/* <button
         onClick={onToggleCollapse}
         style={{
@@ -97,16 +61,16 @@ const StatsOverlay: React.FC<StatsOverlayProps> = ({
         Cursor: <span style={{ color: '#000000' }}>{cursorPos ? `${Math.round(cursorPos.x)},${Math.round(cursorPos.y)}` : '--,--'}</span>
       </button> */}
       <span style={{ minWidth: 60 }}>
-        BG: <span style={{ color: '#888' }}>{backgroundType[0].toUpperCase()}</span>
+        BG: <span className="text-neutral-500 dark:text-neutral-400">{backgroundType[0].toUpperCase()}</span>
       </span>
       <span style={{ minWidth: 60 }}>
-        Zoom: <span style={{ color: '#888' }}>{(zoom * 100).toFixed(0)}%</span>
+        Zoom: <span className="text-neutral-500 dark:text-neutral-400">{(zoom * 100).toFixed(0)}%</span>
       </span>
       <span style={{ minWidth: 70 }}>
-        Units: <span style={{ color: '#888' }}>{measure !== null ? measure.toFixed(1) : '--'}</span>
+        Units: <span className="text-neutral-500 dark:text-neutral-400">{measure !== null ? measure.toFixed(1) : '--'}</span>
       </span>
       <span style={{ minWidth: 90 }}>
-        Cursor: <span style={{ color: '#888' }}>{cursorPos ? `${Math.round(cursorPos.x)},${Math.round(cursorPos.y)}` : '--,--'}</span>
+        Cursor: <span className="text-neutral-500 dark:text-neutral-400">{cursorPos ? `${Math.round(cursorPos.x)},${Math.round(cursorPos.y)}` : '--,--'}</span>
       </span>
     </div>
   );

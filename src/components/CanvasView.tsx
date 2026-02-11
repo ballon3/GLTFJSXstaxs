@@ -136,7 +136,22 @@ const CanvasView: React.FC = () => {
     start: { x: number; y: number };
     cursor: { x: number; y: number };
   } | null>(null);
-  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('darkMode');
+      return saved ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
+  React.useEffect(() => {
+    const root = document.documentElement;
+    if (darkMode) root.classList.add('dark');
+    else root.classList.remove('dark');
+    try {
+      localStorage.setItem('darkMode', JSON.stringify(darkMode));
+    } catch {}
+  }, [darkMode]);
   // --- Project save/load ---
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [saveVersion, setSaveVersion] = useState<number>(0);
@@ -493,6 +508,7 @@ const CanvasView: React.FC = () => {
 
   return (
     <div
+      className={darkMode ? 'dark bg-neutral-900' : 'bg-white'}
       style={{
         width: '100vw',
         height: '100vh',
@@ -500,7 +516,6 @@ const CanvasView: React.FC = () => {
         top: 0,
         left: 0,
         overflow: 'hidden',
-        background: darkMode ? '#0b0b0b' : '#f7f7f7',
       }}
     >
       {/* Layers UI */}
@@ -624,10 +639,10 @@ const CanvasView: React.FC = () => {
         }}
       >
         {backgroundType === 'dotted' && (
-          <SVGGrid width={window.innerWidth} height={window.innerHeight} zoom={1} />
+          <SVGGrid width={window.innerWidth} height={window.innerHeight} zoom={1} darkMode={darkMode} />
         )}
         {backgroundType === 'lined' && (
-          <SVGGridLined width={window.innerWidth} height={window.innerHeight} />
+          <SVGGridLined width={window.innerWidth} height={window.innerHeight} darkMode={darkMode} />
         )}
       </svg>
       {/* Connection drag preview */}

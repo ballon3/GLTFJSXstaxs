@@ -7,30 +7,15 @@ const stats = [
 
 const OverlayShortcuts = () => (
   <div
-    style={{
-      position: 'fixed',
-      top: 100,
-      left: 32,
-      zIndex: 2000,
-      fontFamily: 'Menlo, monospace',
-      fontSize: 13,
-      color: '#222',
-      background: 'none',
-      textAlign: 'left',
-      lineHeight: 1.7,
-      pointerEvents: 'none',
-      letterSpacing: 0.2,
-      userSelect: 'none',
-      minWidth: 260,
-    }}
+    className="fixed top-[100px] left-8 z-[2000] font-[Menlo,monospace] text-[13px] text-[var(--stroke)] bg-none text-left leading-[1.7] pointer-events-none tracking-[0.2px] select-none min-w-[260px]"
   >
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+    <div className="flex flex-col gap-0">
       {stats.map((s) => (
         <div key={s.label} style={{ marginBottom: 10 }}>
-          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 22 }}>
-            <span style={{ minWidth: 90, textAlign: 'left', color: 'rgba(0,0,0,0.55)', fontWeight: 700, fontSize: 14, letterSpacing: 0.5, opacity: 0.7 }}>{s.value}</span>
+          <div className="flex flex-row items-center min-h-[22px]">
+            <span className="min-w-[90px] text-left font-bold text-[14px] tracking-[0.5px] opacity-70 text-neutral-700 dark:text-neutral-300">{s.value}</span>
           </div>
-          <div style={{ textAlign: 'left', color: '#444', fontSize: 11, marginLeft: 0, marginTop: 1, opacity: 0.7 }}>{s.desc}</div>
+          <div className="text-left text-[11px] mt-[1px] opacity-70 text-neutral-600 dark:text-neutral-400">{s.desc}</div>
         </div>
       ))}
     </div>

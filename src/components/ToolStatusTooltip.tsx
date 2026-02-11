@@ -28,15 +28,12 @@ const ToolStatusTooltip: React.FC<ToolStatusTooltipProps> = ({
   return (
     <>
     <div
+      className="fixed right-6 bottom-20 z-[2002]"
       style={{
-        position: 'fixed',
-        bottom: 80,
-        right: 24,
-        zIndex: 2002,
         background: 'transparent',
         padding: collapsed ? '16px 16px' : '28px 28px',
         fontSize: 15,
-        color: '#181818',
+        color: 'var(--stroke)',
         fontFamily: 'Meslo, monospace',
         fontWeight: 600,
         letterSpacing: '0.04em',
@@ -51,56 +48,22 @@ const ToolStatusTooltip: React.FC<ToolStatusTooltipProps> = ({
     >
       <button
         onClick={onToggleCollapse}
-        style={{
-        background: '#eeebeb',
-          color: '#222',
-          border: 'none',
-          borderRadius: 8,
-          fontWeight: 700,
-          fontSize: 28,
-          padding: '10px 22px',
-          marginBottom: 0,
-          cursor: 'pointer',
-          alignSelf: 'center',
-          boxShadow: '0 1px 4px 0 rgba(0,0,0,0.10)',
-          opacity: 0.5,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0,
-          transition: 'background 0.15s',
-        }}
+        className="bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 rounded-lg font-bold text-[28px] px-[22px] py-[10px] mb-0 cursor-pointer self-center shadow-sm opacity-50 flex items-center gap-0"
         title={collapsed ? 'Show tool status' : 'Hide tool status'}
       >
         <span style={{fontSize: '1.5em', marginRight: 0, letterSpacing: '0.04em'}}>⌘</span>
       </button>
       {!collapsed && (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-          alignItems: 'flex-start',
-          width: '100%',
-          marginTop: 12,
-          textAlign: 'left',
-        }}>
-          <div>Snap: <b style={{color:'#181818'}}>{snapToGrid ? 'ON' : 'OFF'}</b> <span style={{opacity:0.6}}>(Ctrl+S)</span></div>
-          <div>Points: <b style={{color:'#181818'}}>{pointMode ? 'ON' : 'OFF'}</b> <span style={{opacity:0.6}}>(Ctrl+P, Enter)</span></div>
-          <div>Select: <b style={{color:'#181818'}}>{selectMode ? 'ON' : 'OFF'}</b> <span style={{opacity:0.6}}>(Ctrl+V)</span></div>
-          <div>Text: <b style={{color:'#181818'}}>{textMode ? 'ON' : 'OFF'}</b> <span style={{opacity:0.6}}>(Ctrl+T)</span></div>
-          <div>Clear: <b style={{color:'#181818'}}>Ctrl+C</b></div>
+        <div className="flex flex-col gap-2 items-start w-full mt-3 text-left">
+          <div>Snap: <b style={{color:'var(--stroke)'}}>{snapToGrid ? 'ON' : 'OFF'}</b> <span className="opacity-60">(Ctrl+S)</span></div>
+          <div>Points: <b style={{color:'var(--stroke)'}}>{pointMode ? 'ON' : 'OFF'}</b> <span className="opacity-60">(Ctrl+P, Enter)</span></div>
+          <div>Select: <b style={{color:'var(--stroke)'}}>{selectMode ? 'ON' : 'OFF'}</b> <span className="opacity-60">(Ctrl+V)</span></div>
+          <div>Text: <b style={{color:'var(--stroke)'}}>{textMode ? 'ON' : 'OFF'}</b> <span className="opacity-60">(Ctrl+T)</span></div>
+          <div>Clear: <b style={{color:'var(--stroke)'}}>Ctrl+C</b></div>
         </div>
       )}
     </div>
-      <div style={{
-          position: 'fixed',
-          bottom: 50,
-          right: 24,
-          color: '#888',
-          fontSize: 15,
-          fontStyle: 'italic',
-          opacity: 0.7,
-          textAlign: 'left',
-        }}>
+      <div className="fixed right-6 bottom-12 text-neutral-500 dark:text-neutral-400 text-[15px] italic opacity-70 text-left">
         ⌘ T <br />to toggle tool status
       </div>
       </>

@@ -1,5 +1,5 @@
 const OverlayLink = () => (
-  <a href="https://archive.staxs.dev/" style={{ position: 'absolute', bottom: 40, left: 90, fontSize: '13px' }}>
+  <a href="https://archive.staxs.dev/" className="absolute left-[90px] bottom-10 text-[13px] text-[var(--stroke)]">
     staxs.dev
     <br />
     canvas experiments

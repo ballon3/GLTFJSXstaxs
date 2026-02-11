@@ -70,22 +70,10 @@ const OverlayColorWheel: React.FC<OverlayColorWheelProps> = ({ color, setColor }
   return (
     <div
       ref={wheelRef}
+      className="fixed top-[18px] left-[18px] z-[2100] rounded-full flex flex-wrap w-[64px] h-[64px] items-center justify-center gap-1 cursor-pointer"
       style={{
-        position: 'fixed',
-        top: 18,
-        left: 18,
-        zIndex: 2100,
         background: 'rgba(255,255,255,0.85)',
-        borderRadius: '50%',
-        display: 'flex',
-        flexWrap: 'wrap',
-        width: 64,
-        height: 64,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 4,
         transition: 'box-shadow 0.3s',
-        cursor: 'pointer',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -95,19 +83,10 @@ const OverlayColorWheel: React.FC<OverlayColorWheelProps> = ({ color, setColor }
           key={c}
           id={`color-btn-${i}`}
           onClick={() => setColor(c)}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[28px] h-[28px] rounded-full cursor-pointer outline-none opacity-70 shadow"
           style={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 28,
-            height: 28,
-            borderRadius: '50%',
-            border: color === c ? '2px solid #222' : '1px solid #ccc',
+            border: color === c ? '2px solid var(--stroke)' : '1px solid #ccc',
             background: c,
-            cursor: 'pointer',
-            outline: 'none',
-            opacity: 0.7,
             boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
           }}
           aria-label={`Choose color ${c}`}

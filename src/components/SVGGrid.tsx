@@ -4,9 +4,10 @@ interface SVGGridProps {
   width: number;
   height: number;
   zoom?: number;
+  darkMode?: boolean;
 }
 
-const SVGGrid: React.FC<SVGGridProps> = ({ width, height, zoom = 1 }) => {
+const SVGGrid: React.FC<SVGGridProps> = ({ width, height, zoom = 1, darkMode = false }) => {
   // Add buffer so grid always fills instantly when zooming out
   const buffer = 2;
   const spacing = 20 * zoom;
@@ -22,8 +23,8 @@ const SVGGrid: React.FC<SVGGridProps> = ({ width, height, zoom = 1 }) => {
             cx={x * spacing + 10 * zoom}
             cy={y * spacing + 10 * zoom}
             r={dotRadius}
-            fill="#bbb"
-            opacity={0.7}
+            fill={darkMode ? 'var(--grid)' : '#bbb'}
+            opacity={darkMode ? 0.55 : 0.7}
           />
         ))
       )}

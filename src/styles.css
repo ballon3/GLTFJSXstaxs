@@ -1,3 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* App scaffold */
+html, body, #root {
+  height: 100%;
+}
+
+/* Theme helpers */
+:root {
+  --stroke: #181818;
+  --grid: #bbb;
+}
+.dark {
+  --stroke: #eaeaea;
+  --grid: #6b7280; /* neutral-500 */
+}
 @import url('https://rsms.me/inter/inter.css');
 
 @font-face {
@@ -26,6 +44,11 @@ body {
   background: white;
   color: black;
   font-family: 'Inter';
+}
+
+.dark body {
+  background: #0a0a0a;
+  color: #eaeaea;
 }
 
 a {

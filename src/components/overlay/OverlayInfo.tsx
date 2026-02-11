@@ -1,5 +1,5 @@
 const OverlayInfo = () => (
-  <div style={{ position: 'absolute', top: 40, right: 40, fontSize: '13px', fontFamily: 'Meslo', lineHeight: '1.6em', whiteSpace: 'pre' }}>
+  <div className="absolute top-10 right-10 text-[13px] font-[Meslo] leading-[1.6em] whitespace-pre text-[var(--stroke)]">
     &gt; gltfjsx 3d web interface
     <br />
     &gt; todo: drag &amp; drop model upload
